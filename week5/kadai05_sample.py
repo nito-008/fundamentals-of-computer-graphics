@@ -29,19 +29,19 @@ def getBaseN(i, n, t) -> float:
         return 0.0
     else:
         # 係数を計算するときに、ノットが重なる（分母がゼロとなる）ときには、その項を無視する
+        term1 = 0.0
+        denominator1 = g_NotVector[i + n] - g_NotVector[i]
+        if denominator1 != 0.0:
+            term1 = ((t - g_NotVector[i]) / denominator1) * getBaseN(i, n - 1, t)
 
-        if n == 0:
-            return 0.0
-        else:
-            return (
-                (t - g_NotVector[i])
-                / (g_NotVector[i + n] - g_NotVector[i])
-                * getBaseN(n - 1, i, t)
-            ) + (
-                (g_NotVector[i + n + 1] - t)
-                / (g_NotVector[i + n + 1] - g_NotVector[i + 1])
-                * getBaseN(n - 1, i + 1, t)
+        term2 = 0.0
+        denominator2 = g_NotVector[i + n + 1] - g_NotVector[i + 1]
+        if denominator2 != 0.0:
+            term2 = ((g_NotVector[i + n + 1] - t) / denominator2) * getBaseN(
+                i + 1, n - 1, t
             )
+
+        return term1 + term2
 
 
 # 表示部分をこの関数で記入
@@ -68,6 +68,21 @@ def display():
     # ここにBスプライン曲線を描画するプログラムコードを入れる
     # ヒント1: 3次Bスプラインの場合は制御点を4つ入れるまでは何も描けない
     # ヒント2: パラメータtの値の取り得る範囲に注意
+    if len(g_ControlPoints) >= 4:
+        glColor3d(0.0, 0.0, 0.0)
+        glLineWidth(2)
+        glBegin(GL_LINE_STRIP)
+
+        t_start = g_NotVector[3]
+        t_end = g_NotVector[len(g_ControlPoints)]
+
+        for t in np.arange(t_start, t_end, 0.01):
+            point_on_curve = np.array([0.0, 0.0])
+            for i in range(len(g_ControlPoints)):
+                base_n = getBaseN(i, 3, t)
+                point_on_curve += base_n * g_ControlPoints[i]
+            glVertex2dv(point_on_curve)
+        glEnd()
 
     glFlush()  # 画面出力
 
